@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "framer-motion";
@@ -11,24 +12,27 @@ const projects = [
     description: "An AI-powered grievance redressal system for Indian Railways. Automatically categorizes complaints, assigns them to respective departments, and generates automated responses using LLMs to reduce resolution time.",
     tech: ["Next.js", "Python", "FastAPI", "OpenAI API", "PostgreSQL"],
     link: "#",
-    github: "#",
-    color: "from-blue-500 to-indigo-500"
+    github: "https://github.com/rohittt8241",
+    color: "from-blue-500 to-indigo-500",
+    image: "/projects/railmadad.png"
   },
   {
     title: "NFT Marketplace",
     description: "A decentralized platform for minting, buying, and selling digital assets. Features smart contract integration, real-time bidding, and a seamless Web3 wallet authentication experience.",
     tech: ["React", "Solidity", "Ethers.js", "Tailwind", "IPFS"],
     link: "#",
-    github: "#",
-    color: "from-purple-500 to-pink-500"
+    github: "https://github.com/rohittt8241",
+    color: "from-purple-500 to-pink-500",
+    image: "/projects/nft.png"
   },
   {
     title: "CloudCat",
     description: "A robust cloud file storage and sharing platform built for high-performance teams. Supports real-time collaboration, file versioning, and end-to-end encryption for maximum security.",
     tech: ["Vue.js", "Node.js", "AWS S3", "GraphQL", "Redis"],
     link: "#",
-    github: "#",
-    color: "from-emerald-400 to-cyan-500"
+    github: "https://github.com/rohittt8241",
+    color: "from-emerald-400 to-cyan-500",
+    image: "/projects/cloudcat.png"
   }
 ];
 
@@ -103,19 +107,53 @@ function ProjectCard({ project, index }: { project: typeof projects[0], index: n
             {project.title}
           </h4>
           <div className="flex gap-3 shrink-0">
-            <a href={project.github} className="h-10 w-10 md:h-12 md:w-12 rounded-full glass border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/30 transition-all hover:scale-110">
-              <FaGithub size={20} />
+            <a 
+              href={project.github} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group/github relative h-10 w-10 md:h-12 md:w-12 rounded-full glass border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/50 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+            >
+              <FaGithub size={20} className="relative z-10" />
+              {/* Tooltip */}
+              <span className="absolute -top-12 scale-0 opacity-0 transition-all duration-300 group-hover/github:scale-100 group-hover/github:opacity-100 bg-[#111] text-xs font-semibold text-white px-3 py-1.5 rounded-lg border border-white/10 whitespace-nowrap shadow-xl pointer-events-none z-50">
+                View Source Code
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#111] border-b border-r border-white/10 rotate-45"></span>
+              </span>
             </a>
-            <a href={project.link} className="h-10 w-10 md:h-12 md:w-12 rounded-full glass border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/30 transition-all hover:scale-110">
+            <a 
+              href={project.link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="h-10 w-10 md:h-12 md:w-12 rounded-full glass border border-white/10 flex items-center justify-center text-gray-300 hover:text-white hover:border-white/50 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+            >
               <ArrowUpRight size={20} />
             </a>
           </div>
         </div>
 
-        {/* Project Preview Placeholder (Maintains aspect ratio) */}
-        <div className="w-full aspect-[16/9] mb-8 relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center group/image">
-           <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-20 group-hover/image:opacity-40 transition-opacity duration-500`}></div>
-           <span className="text-gray-500 font-medium tracking-widest uppercase relative z-10 drop-shadow-md">Project Preview</span>
+        {/* Project Preview with Image */}
+        <div className="w-full aspect-[16/9] mb-8 relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] flex items-center justify-center group/image glass shadow-2xl">
+           {project.image ? (
+             <>
+               <Image
+                 src={project.image}
+                 alt={`${project.title} Preview`}
+                 fill
+                 className="object-cover transition-transform duration-700 ease-out group-hover/image:scale-105"
+                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                 loading="lazy"
+                 quality={90}
+               />
+               <div className="absolute inset-0 bg-[#0a0a0a]/20 group-hover/image:bg-transparent transition-colors duration-500 z-10"></div>
+               <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-0 group-hover/image:opacity-30 transition-opacity duration-500 mix-blend-overlay z-20`}></div>
+               <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] pointer-events-none rounded-2xl z-30"></div>
+             </>
+           ) : (
+             <div className="relative w-full h-full flex items-center justify-center">
+               <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-20 group-hover/image:opacity-40 transition-opacity duration-500`}></div>
+               <span className="text-gray-500 font-medium tracking-widest uppercase relative z-10 drop-shadow-md">Preview Unavailable</span>
+             </div>
+           )}
         </div>
 
         {/* Description & Tech Stack */}
