@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Mail, MapPin, Phone, Send } from "lucide-react";
-
-import { useState } from "react";
+import { Mail, Phone, Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import SocialIcon from "./SocialIcon";
 
 export default function Contact() {
@@ -14,11 +13,82 @@ export default function Contact() {
   const infoRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [showToast, setShowToast] = useState(false);
+  const [toastData, setToastData] = useState({ type: "success", message: "" });
+
   const handleCopy = () => {
     navigator.clipboard.writeText("rohitt9702@gmail.com");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setToastData({ type: "error", message: "Please fill in all fields." });
+      setShowToast(true);
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      setToastData({ type: "error", message: "Please enter a valid email address." });
+      setShowToast(true);
+      return;
+    }
+
+    setStatus("loading");
+
+    try {
+      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          service_id: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+          template_id: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+          user_id: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+          template_params: {
+            name: formData.name,
+            email: formData.email,
+            message: formData.message,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        setFormData({ name: "", email: "", message: "" });
+        setToastData({ type: "success", message: "Message sent successfully!" });
+        setShowToast(true);
+        setTimeout(() => setStatus("idle"), 5000);
+      } else {
+        const errorText = await response.text();
+        console.error("EmailJS API Error:", errorText);
+        throw new Error("Failed to send message: " + errorText);
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setStatus("error");
+      setToastData({ type: "error", message: "Something went wrong. Please try again later." });
+      setShowToast(true);
+      setTimeout(() => setStatus("idle"), 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -108,9 +178,45 @@ export default function Contact() {
             </div>
           </div>
 
-          <form ref={formRef} className="glass p-8 md:p-12 rounded-3xl border border-white/10 flex flex-col gap-6 relative overflow-hidden group hover:border-white/20 hover:-translate-y-2 transition-all duration-300 bg-[#0a0a0a]/50 backdrop-blur-xl">
+          <form onSubmit={handleSubmit} ref={formRef} className="glass p-8 md:p-12 rounded-3xl border border-white/10 flex flex-col gap-6 relative overflow-hidden group hover:border-white/20 hover:-translate-y-2 transition-all duration-300 bg-[#0a0a0a]/50 backdrop-blur-xl">
             {/* Background glow effect */}
             <div className={`absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full blur-[100px] opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none translate-x-1/2 -translate-y-1/2`}></div>
+
+            <AnimatePresence>
+              {status === "success" && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0a]/90 backdrop-blur-md rounded-3xl"
+                >
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", delay: 0.2 }}
+                    className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6"
+                  >
+                    <CheckCircle className="text-green-500 w-10 h-10" />
+                  </motion.div>
+                  <motion.h4 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-2xl font-bold text-white mb-2 font-heading"
+                  >
+                    Message Sent!
+                  </motion.h4>
+                  <motion.p 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-gray-400 text-center px-8"
+                  >
+                    Thank you for reaching out. I'll get back to you as soon as possible.
+                  </motion.p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <h4 className="text-2xl font-bold mb-4 relative z-10 text-white font-heading">Send a Message</h4>
             
@@ -119,7 +225,10 @@ export default function Contact() {
               <input 
                 type="text" 
                 id="name" 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                disabled={status === "loading"}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all disabled:opacity-50"
                 placeholder="John Doe"
               />
             </div>
@@ -129,7 +238,10 @@ export default function Contact() {
               <input 
                 type="email" 
                 id="email" 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                disabled={status === "loading"}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all disabled:opacity-50"
                 placeholder="john@example.com"
               />
             </div>
@@ -139,22 +251,54 @@ export default function Contact() {
               <textarea 
                 id="message" 
                 rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                disabled={status === "loading"}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none disabled:opacity-50"
                 placeholder="Tell me about your project..."
               ></textarea>
             </div>
             
             <button 
-              type="button"
-              className="relative z-10 mt-4 bg-white text-black font-semibold rounded-xl px-6 py-4 flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors group/btn"
+              type="submit"
+              disabled={status === "loading" || status === "success"}
+              className="relative z-10 mt-4 bg-white text-black font-semibold rounded-xl px-6 py-4 flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors group/btn disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-white"
             >
-              Send Message
-              <Send size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+              {status === "loading" ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  Send Message
+                  <Send size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            className={`fixed bottom-10 left-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${
+              toastData.type === "success" 
+                ? "bg-green-500/10 border-green-500/20 text-green-400" 
+                : "bg-red-500/10 border-red-500/20 text-red-400"
+            }`}
+          >
+            {toastData.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+            <span className="font-medium">{toastData.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
