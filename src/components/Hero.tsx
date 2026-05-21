@@ -119,8 +119,7 @@ export default function Hero() {
             Contact Me
           </a>
           <a
-            href="/resume.pdf"
-            download
+            href="/resume/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto px-8 py-4 glass border border-primary-500/30 text-primary-400 font-semibold rounded-2xl hover:bg-primary-500/10 hover:border-primary-500/50 transition-all duration-300 backdrop-blur-md active:scale-95 flex items-center justify-center gap-2 group"

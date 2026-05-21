@@ -58,8 +58,7 @@ export default function Navbar() {
           </div>
 
           <a
-            href="/resume.pdf"
-            download
+            href="/resume/resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md hover:scale-105 active:scale-95 group"
@@ -98,8 +97,7 @@ export default function Navbar() {
               </Link>
             ))}
             <a
-              href="/resume.pdf"
-              download
+              href="/resume/resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-500 px-4 py-3 rounded-xl text-white font-medium transition-all mt-4 active:scale-95 group"
