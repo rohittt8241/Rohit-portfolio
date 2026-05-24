@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Mail, Phone, Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import emailjs from "@emailjs/browser";
 import SocialIcon from "./SocialIcon";
 
 export default function Contact() {
@@ -46,34 +47,28 @@ export default function Contact() {
     setStatus("loading");
 
     try {
-      const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          service_id: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-          template_id: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
-          user_id: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
-          template_params: {
-            name: formData.name,
-            email: formData.email,
-            message: formData.message,
-          },
-        }),
-      });
+      const form = {
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      };
 
-      if (response.ok) {
-        setStatus("success");
-        setFormData({ name: "", email: "", message: "" });
-        setToastData({ type: "success", message: "Message sent successfully!" });
-        setShowToast(true);
-        setTimeout(() => setStatus("idle"), 5000);
-      } else {
-        const errorText = await response.text();
-        console.error("EmailJS API Error:", errorText);
-        throw new Error("Failed to send message: " + errorText);
-      }
+      await emailjs.send(
+        "service_wo31ghk",
+        "template_pvzwgyd",
+        {
+          from_name: form.name,
+          from_email: form.email,
+          message: form.message,
+        },
+        "uZTuCfx6krxZrwCt1"
+      );
+
+      setStatus("success");
+      setFormData({ name: "", email: "", message: "" });
+      setToastData({ type: "success", message: "Message sent successfully!" });
+      setShowToast(true);
+      setTimeout(() => setStatus("idle"), 5000);
     } catch (error) {
       console.error("Error sending email:", error);
       setStatus("error");
